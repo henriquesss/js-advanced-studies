@@ -1,0 +1,25 @@
+{
+  "name": "recorded",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/",
+    "test:watch": "node --watch --test test/",
+    "test:cov": "npx c8 --100 --all --exclude src/index.js node --test test/",
+    "test:cov-experimental": "node --experimental-test-coverage --test test/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": "v20.5.0"
+  },
+  "dependencies": {
+    "c8": "^8.0.1",
+    "lokijs": "^1.5.12",
+    "sinon": "^15.2.0"
+  }
+}
