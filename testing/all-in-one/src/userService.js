@@ -12,17 +12,19 @@ const functions = {
         return user;
     },
     create: (userData) => {
-        return userRepository.create(userData)
+        const success = userRepository.create(userData);
+
+        return success;
     },
     update: (id, userData) => {
-        const updatedUser = userRepository.updateUser(id, userData);
+        const updatedUser = userRepository.update(id, userData);
         if (!updatedUser) {
             throw new Error('User not found');
         }
         return updatedUser;
     },
     delete: (id) => {
-        const success = userRepository.deleteUser(id);
+        const success = userRepository.delete(id);
         if (!success) {
             throw new Error('User not found');
         }

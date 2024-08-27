@@ -24,7 +24,7 @@ const controllerFunctions = {
             const newUser = userService.create(req.body);
             res.status(201).json(newUser);
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            res.status(404).json({ message: error.message });
         }
     },
     

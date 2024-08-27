@@ -1,111 +1,80 @@
-const { describe, it, beforeEach, before, after, afterEach } = require('node:test');
-const userService = require('../src/userService.js');
-const assert = require('node:assert');
-const crypto = require('node:crypto');
-const sinon = require('sinon');
+const { test, beforeEach } = require('node:test');
+const assert = require('assert');
+const userService = require('../src/userService')
 
-describe('userService test suit', () => {
-    beforeEach(() => {
-        const seedData = {
-            name: 'Fulano',
-            email: 'fulano@ciclano.com',
-            status: 'active'
-        }
+let users;
+let currentId;
 
-        userService.create(seedData)
-    })
+beforeEach(() => {
+    users = [
+        { id: 1, name: 'Alice', email: 'alice@example.com' },
+        { id: 2, name: 'Bob', email: 'bob@example.com' },
+    ];
+    currentId = 3;
+});
 
-    describe('#list', () => {
-        const mockDatabase = [
-            {
-                name: 'Fulano',
-                email: 'fulano@ciclano.com',
-                status: 'active',
-                id: 1
-            }
-        ]
+test('list should return all users', () => {
+    const result = userService.list();
+    assert.deepStrictEqual(result, users);
+});
 
-        it('should return a list of user with uppercase name', async () => {
-            const expected = mockDatabase
-                .map(({name, ...result}) => (
-                    ({ name: name.toUpperCase(), ...result }
-                )))
+test('listById should return the user with the given id', () => {
+    const result = userService.listById(1);
+    assert.deepStrictEqual(result, users[0]);
 
-            const result = userService.list()
-            assert.deepStrictEqual(result, expected)
-        })
-    })
+    assert.throws(
+        () => {
+            userService.listById(99); // Supondo que 99 não existe
+        },
+        new Error('User not found')
+    );
+});
 
-    // describe('#create', () => {
-    //     let _userService
-    //     let _dependencies
-    //     let _sandbox
+test('create(userData) should create a new user with an incremented ID', () => {
+    const newUser = { name: 'Charlie', email: 'charlie@example.com' };
+    const result = userService.create(newUser);
+    const allUsers = userService.list();
 
-    //     const mockCreateResult = {
-    //         text: 'I must meet Chaves da Silva',
-    //         when: new Date('2020-12-01 12:00:00 GMT-0'),
-    //         status: 'late',
-    //         id: '593e284b-a324-41d0-bf5e-1d751a048bab'
-    //       }
+    assert.deepStrictEqual(result, { id: 3, name: 'CHARLIE', email: 'charlie@example.com' });
+    assert.strictEqual(allUsers.length, 3);
+    assert.deepStrictEqual(allUsers[2], { id: 3, name: 'CHARLIE', email: 'charlie@example.com' });
+});
 
-    //     const DEFAULT_ID = mockCreateResult.id
-    //     before(() => {
-    //         // É feito esse ajuste do crypto para não depender do ambiente
-    //         crypto.randomUUID = () => DEFAULT_ID
-    //         _sandbox = sinon.createSandbox()
-    //     })
-    //     after(async () => {
-    //         crypto.randomUUID = (await import('node:crypto')).randomUUID // manual reset
-    //     })
-    //     afterEach(() => _sandbox.restore())
-    //     beforeEach((context) => {
-    //         _dependencies = {
-    //             userRepository: {
-    //                 create: context.mock.fn(async () => mockCreateResult)
-    //             }
-    //         }
-    //         _userService = new TodoService(_dependencies)
-    //     })
+test('update should update the user with the given id', () => {
+    const updatedData = { email: 'alice_updated@example.com' };
+    const result = userService.update(1, updatedData);
+    const allUsers = userService.list()
 
-    //     it(`shouldn't save todo item with invalid date`, async () => {
-    //         const input = new Todo({
-    //             text: '',
-    //             when: '',
-    //         })
+    assert.deepStrictEqual(result, { id: 1, name: 'Alice', email: 'alice_updated@example.com' });
+    assert.strictEqual(allUsers[0].email, 'alice_updated@example.com');
+});
 
-    //         const expected = {
-    //             error: {
-    //                 message: 'invalid data',
-    //                 data: {
-    //                     text: '',
-    //                     when: '',
-    //                     status: '',
-    //                     id: DEFAULT_ID
-    //                 }
-    //             }
-    //         }
+test('update should return false if user is not found', () => {
+    assert.throws(
+        () => {
+            userService.update(99, { email: 'notfound@example.com' }); // Supondo que 99 não existe
+        },
+        new Error('User not found')
+    );
+});
 
-    //         const result = await _userService.create(input)
-    //         assert.deepStrictEqual(JSON.stringify(result), JSON.stringify(expected))
-    //     })
+test('delete should delete the user with the given id', () => {
+    const result = userService.delete(1);
+    const allUsers = userService.list();
 
-    //     it(`should save todo item with late status when the property is further than today`, async () => {
-    //         const properties = {
-    //             text: 'I must plan my trip to Europe',
-    //             when: new Date('2020-12-01 12:00:00 GMT-0')
-    //         }
+    assert.strictEqual(result, true);
+    assert.strictEqual(allUsers.length, 2);
+    assert.strictEqual(allUsers.find(u => u.id === 1), undefined);
+});
 
-    //         const input = new Todo(properties)
-    //         const expected = { ...properties, status: 'late', id: DEFAULT_ID }
+test('delete should return false if user is not found', () => {
+    const allUsers = userService.list()
+    assert.throws(
+        () => {
+            userService.delete(99); // Supondo que 99 não existe
+        },
+        new Error('User not found')
+    );
 
-    //         const today = new Date('2020-12-02')
-    //         _sandbox.useFakeTimers(today.getTime())
-
-    //         await _userService.create(input)
-
-    //         const fnMock = _dependencies.userRepository.create.mock
-    //         assert.strictEqual(fnMock.callCount(), 1)
-    //         assert.deepStrictEqual(JSON.stringify(fnMock.calls[0].arguments[0]), JSON.stringify(expected))
-    //     })
-    // })
-})
+    assert.strictEqual(allUsers.length, 2);
+});
